@@ -1,18 +1,21 @@
 #!/bin/bash
 
 # Partition the disk
-fdisk /dev/nvme0n1 << EOF
+fdisk /dev/vda << EOF
 m
 n
+p
 1
 
 
 +1G
 n
+p
 2
 
 +2G
 n
+e
 3
 
 
@@ -21,13 +24,13 @@ w
 EOF
 
 # Format the partitions
-mkfs.fat -F32 /dev/nvme0n1p1
-mkswap /dev/nvme0n1p2
-swapon /dev/nvme0n1p2
-mkfs.ext4 /dev/nvme0n1p3
+mkfs.fat -F32 /dev/vda1
+mkswap /dev/vda2
+swapon /dev/vda2
+mkfs.ext4 /dev/vda3
 
 # Mount the root partition
-mount /dev/nvme0n1p3 /mnt
+mount /dev/vda3 /mnt
 
 # Install base system
 if ! pacstrap /mnt base linux linux-firmware; then
@@ -59,7 +62,7 @@ echo "breezela" > /etc/hostname
 # Edit hosts file
 cat <<EOF > /etc/hosts
 127.0.0.1 localhost
-::1 localhost 
+::1 localhost
 127.0.1.1   breezela.localdomain breezela
 EOF
 
@@ -79,7 +82,7 @@ echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
 # Install GRUB and related tools
 pacman -S --noconfirm grub efibootmgr dosfstools os-prober mtools
 mkdir -p /boot/EFI
-mount /dev/nvme0n1p1 /boot/EFI
+mount /dev/vda1 /boot/EFI
 grub-install --target=x86_64-efi --efi-directory=/boot/EFI --bootloader-id=grub_uefi --recheck
 grub-mkconfig -o /boot/grub/grub.cfg
 
