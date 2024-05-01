@@ -9,16 +9,19 @@ p
 
 
 +1G
+y
 n
 p
 2
 
 +2G
+y
 n
 e
 3
 
 
+y
 
 w
 EOF
