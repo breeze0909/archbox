@@ -1,99 +1,81 @@
+
 #!/bin/bash
 
-# Partition the disk
-fdisk /dev/vda << EOF
-m
-n
-p
-1
+
+mkfs.fat -F32 /dev/nvme0n1p1
+mkswap /dev/nvme0n1p2
+swapon
+mkfs.ext4 /dev/nvme0n1p1
+
+mount /dev/nvme0n1p3 /mnt
 
 
-+1G
-y
-n
-p
-2
-
-+2G
-y
-n
-e
-3
+pacstrap /mnt base linux linux-firmware
 
 
-y
-
-w
-EOF
-
-# Format the partitions
-mkfs.fat -F32 /dev/vda1
-mkswap /dev/vda2
-swapon /dev/vda2
-mkfs.ext4 /dev/vda3
-
-# Mount the root partition
-mount /dev/vda3 /mnt
-
-# Install base system
-if ! pacstrap /mnt base linux linux-firmware; then
-    echo "Error: Failed to install base system."
-    exit 1
-fi
-
-# Generate fstab
 genfstab -U /mnt >> /mnt/etc/fstab
 
-# Chroot into the new system
 arch-chroot /mnt << CHROOT
+
+
 # Set timezone
 ln -sf /usr/share/zoneinfo/India/Kolkata /etc/localtime
 hwclock --systohc
 
 # Install nano text editor
-pacman -S --noconfirm nano neovim sudo
+pacman -S --noconfirm nano
 
-# Edit locale.gen file
+# Edit locale.gen file to uncomment en_IN.UTF-8
 sed -i 's/#en_IN.UTF-8/en_IN.UTF-8/' /etc/locale.gen
 
 # Generate locale
 locale-gen
 
-# Set hostname
-echo "breezela" > /etc/hostname
+# Edit hostname file with nano
+nano /etc/hostname
+echo "breezelap" > /etc/hostname
 
-# Edit hosts file
-cat <<EOF > /etc/hosts
-127.0.0.1 localhost
-::1 localhost
-127.0.1.1   breezela.localdomain breezela
-EOF
+# Edit hosts file with nano
+nano /etc/hosts
+echo "127.0.0.1 localhost" > /etc/hosts
+echo "::1 localhost" >> /etc/hosts
+echo "127.0.1.1 breezelap.localdomain breezelap" >> /etc/hosts
 
 # Set root password
+echo "Set root password:"
 passwd
+Mpl0923
+Mpl0923
 
 # Create a new user
-useradd -m user1
-passwd user1
+useradd -m breeze
+echo "Set password for user 'breeze':"
+passwd breeze
+Mpl0923
+Mpl0923
 
 # Add the new user to necessary groups
-usermod -aG wheel,audio,video,optical,storage user1
+usermod -aG wheel,audio,video,optical,storage breeze
 
-# Configure sudoers using visudo
-echo "%wheel ALL=(ALL) ALL" >> /etc/sudoers
+# Install sudo
+pacman -S sudo
+
+# Configure sudoers using nano
+EDITOR=nano visudo
 
 # Install GRUB and related tools
-pacman -S --noconfirm grub efibootmgr dosfstools os-prober mtools
-mkdir -p /boot/EFI
-mount /dev/vda1 /boot/EFI
-grub-install --target=x86_64-efi --efi-directory=/boot/EFI --bootloader-id=grub_uefi --recheck
+pacman -S --noconfirm grub
+pacman -S --noconfirm efibootmgr dosfstools os-prober mtools # If doing UEFI
+mkdir /boot/EFI # If doing UEFI
+mount /dev/nvme0n1p1 /boot/EFI # Mount FAT32 EFI partition (if doing UEFI)
+grub-install --target=x86_64-efi --efi --bootloader-id=grub_uefi --recheck # If doing UEFI
 grub-mkconfig -o /boot/grub/grub.cfg
 
 # Install and enable NetworkManager
-pacman -S --noconfirm networkmanager
+pacman -S networkmanager
 systemctl enable NetworkManager
 
-exit
-CHROOT
-
-echo "Installation complete. You can now reboot."
+# Reboot the system
+exit # Exit the chroot
+umount -l /mnt # Unmount /mnt
+reboot # Reboot the system
