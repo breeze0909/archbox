@@ -61,11 +61,11 @@ usermod -aG wheel,audio,video,optical,storage breeze
 pacman -S sudo
 
 # Configure sudoers using nano
-EDITOR=nano visudo
+#EDITOR=nano visudo
 
 # Install GRUB and related tools
-pacman -S --noconfirm grub
-pacman -S --noconfirm efibootmgr dosfstools os-prober mtools # If doing UEFI
+pacman -S grub
+pacman -S efibootmgr dosfstools os-prober mtools # If doing UEFI
 mkdir /boot/EFI # If doing UEFI
 mount /dev/nvme0n1p1 /boot/EFI # Mount FAT32 EFI partition (if doing UEFI)
 grub-install --target=x86_64-efi --efi --bootloader-id=grub_uefi --recheck # If doing UEFI
