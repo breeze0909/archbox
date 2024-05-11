@@ -44,15 +44,15 @@ echo "127.0.1.1 breezelap.localdomain breezelap" >> /etc/hosts
 # Set root password
 echo "Set root password:"
 passwd
-Mpl0923
-Mpl0923
+pass
+pass
 
 # Create a new user
 useradd -m breeze
 echo "Set password for user 'breeze':"
 passwd breeze
-Mpl0923
-Mpl0923
+pass
+pass
 
 # Add the new user to necessary groups
 usermod -aG wheel,audio,video,optical,storage breeze
